@@ -5,36 +5,26 @@ using namespace std;
 
 int main () {
 
-    const int screenWidth = 800;
-    const int screenHeight = 600;
-    int ball_x = 100;
-    int ball_y = 100;
-    int ball_speed_x = 5;
-    int ball_speed_y = 5;
-    int ball_radius = 15;
+    const int screenWidth = 1600;
+    const int screenHeight = 900;
 
-    cout << "Hello World" << endl;
-
-    InitWindow(screenWidth, screenHeight, "My first RAYLIB program!");
+    InitWindow(screenWidth, screenHeight, "Projekat iz kompjutacione geometrije.");
     SetTargetFPS(60);
 
     while (WindowShouldClose() == false){
         BeginDrawing();
-        ClearBackground(BLACK);
-        ball_x += ball_speed_x;
-        ball_y += ball_speed_y;
 
-        if(ball_x + ball_radius >= screenWidth  || ball_x - ball_radius <= 0)
+        // DrawCircleLines(100,200,50, WHITE);
+        for (int i = 0; i < 20; i++)
         {
-            ball_speed_x *= -1;
+            int x = GetRandomValue(0, screenWidth);
+            int y = GetRandomValue(0, screenHeight);
+            int radius = GetRandomValue(0, 100);
+            Color color = (Color){ GetRandomValue(0, 255), GetRandomValue(0, 255), GetRandomValue(0, 255), 255 };
+
+            DrawCircleLines(x, y, radius, color);
         }
 
-        if(ball_y + ball_radius >= screenHeight  || ball_y - ball_radius <= 0)
-        {
-            ball_speed_y *= -1;
-        }
-
-        DrawCircle(ball_x,ball_y,ball_radius, WHITE);
         EndDrawing();
     }
 
