@@ -1,0 +1,19 @@
+fast_intersections:
+
+struct Semicircle
+    x, y, radius, bottom = True or False
+
+set semicircles
+
+vector events
+
+
+
+
+
+
+
+
+
+
+
