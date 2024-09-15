@@ -243,19 +243,22 @@ int main() {
     */
 
     // EXAMPLE: RANDOM
-    for(int i = 0; i < 20; i++) {
+    /*for(int i = 0; i < 20; i++) {
         int x = GetRandomValue(0, screenWidth);
         int y = GetRandomValue(0, screenHeight);
         int radius = GetRandomValue(0, 100);
 
         circles.push_back(Circle(x,y,radius));
-    }
+    }*/
 
     // EXAMPLE: 3 CIRCLES
     // circles.push_back(Circle(400, 300, 140));
     // circles.push_back(Circle(300, 100, 100));
     // circles.push_back(Circle(260,220, 10));
+    
 
+    int num_c = 0;
+    Vector2 center_pos;
     while(!WindowShouldClose()){
         BeginDrawing();
 
@@ -263,6 +266,21 @@ int main() {
             c.draw();
 
         EndDrawing();
+
+        if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            // Get mouse position
+            Vector2 mousePos = GetMousePosition();
+
+            if(num_c % 2 == 0) {
+                center_pos = mousePos;
+            } else {
+                circles.push_back(Circle(center_pos.x, center_pos.y, sqrt(pow(center_pos.y - mousePos.y, 2) + pow((center_pos.x - mousePos.x), 2))));
+            }
+
+            // Draw a dot (small circle) at the mouse position
+            DrawCircleV(mousePos, 2, GREEN);  // 5 is the radius, RED is the color
+            num_c++;
+        }
 
         if (IsKeyPressed(KEY_ENTER))
         {
