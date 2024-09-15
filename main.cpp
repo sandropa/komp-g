@@ -26,7 +26,7 @@ struct Semicircle {
         return h;
     }
 
-    /*bool operator<(const Semicircle& other) const {
+    bool operator<(const Semicircle& other) const {
         // we will use current heights
         // we will be working with ints for heights (that should be enough)
 
@@ -34,15 +34,15 @@ struct Semicircle {
             return get_height() < other.get_height();
         }
         return bottom < other.bottom;
-    }*/
+    }
 
-    bool operator<(const Semicircle& other) const {
+    /*bool operator<(const Semicircle& other) const {
         // we are using y coordinate
         if (y != other.y) {
             return y < other.y;
         }
         return bottom < other.bottom;
-    }
+    }*/
 
     void print() const {
         cout<<"semicircle "<<x<<" "<<y<<" "<<radius<<(bottom ? " bottom " : " top ")<<sweepline_x<<endl;
@@ -149,6 +149,8 @@ bool fast_intersections(vector<Circle>& circles) {
         Circle curr_c = event.second;
         Semicircle curr_top_smc = Semicircle(curr_c.x, curr_c.y, curr_c.radius, false);
         Semicircle curr_bottom_smc = Semicircle(curr_c.x, curr_c.y, curr_c.radius, true);
+
+        Semicircle::sweepline_x = event.first;
         
         /*cout<<"TRENUTNO STANJE"<<endl;
         for(auto c : active_semicircles)
@@ -209,24 +211,6 @@ bool fast_intersections(vector<Circle>& circles) {
 }
 
 int main() {
-    // TMP =============================================================================
-    Semicircle::sweepline_x = -50;
-    Semicircle a{0, 0, 50, false};
-    Semicircle b{0, 0, 50, true};
-    Semicircle c{40, 30, 5, true};
-    Semicircle d{40, 30, 5, false};
-
-    set<Semicircle> smcs;
-    smcs.insert(a);
-    smcs.insert(b);
-    Semicircle::sweepline_x = 40 - 5;
-    smcs.insert(c);
-    smcs.insert(d);
-
-    for(auto it = smcs.begin(); it != smcs.end(); it++)
-        it->print();
-
-    // TMP =============================================================================
 
     // Initialization
     const int screenWidth = 1600;
@@ -243,7 +227,7 @@ int main() {
     */
 
     // EXAMPLE: RANDOM
-    /*for(int i = 0; i < 20; i++) {
+    /* for(int i = 0; i < 20; i++) {
         int x = GetRandomValue(0, screenWidth);
         int y = GetRandomValue(0, screenHeight);
         int radius = GetRandomValue(0, 100);
@@ -252,9 +236,9 @@ int main() {
     }*/
 
     // EXAMPLE: 3 CIRCLES
-    // circles.push_back(Circle(400, 300, 140));
-    // circles.push_back(Circle(300, 100, 100));
-    // circles.push_back(Circle(260,220, 10));
+    //circles.push_back(Circle(400, 300, 140));
+    //circles.push_back(Circle(300, 100, 100));
+    //circles.push_back(Circle(260,220, 10));
     
 
     int num_c = 0;
