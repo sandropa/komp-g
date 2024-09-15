@@ -18,7 +18,24 @@ struct Semicircle {
 
     Semicircle(int x, int y, int radius, bool bottom) 
         : x{x}, y{y}, radius{radius}, bottom{bottom} {}
-    
+
+    // h = y + sign * sqrt(r^2 - (sweepline_x - x)^2)
+    int get_height() const {
+        int sign = bottom ? 1 : -1;
+        int h = y + sign * sqrt(pow(radius, 2) - pow(sweepline_x - x, 2));
+        return h;
+    }
+
+    /*bool operator<(const Semicircle& other) const {
+        // we will use current heights
+        // we will be working with ints for heights (that should be enough)
+
+        if (get_height() != other.get_height()) { // h instead of y
+            return get_height() < other.get_height();
+        }
+        return bottom < other.bottom;
+    }*/
+
     bool operator<(const Semicircle& other) const {
         // we are using y coordinate
         if (y != other.y) {
@@ -26,22 +43,68 @@ struct Semicircle {
         }
         return bottom < other.bottom;
     }
+
+    void print() const {
+        cout<<"semicircle "<<x<<" "<<y<<" "<<radius<<(bottom ? " bottom " : " top ")<<sweepline_x<<endl;
+    }
 };
+
+int Semicircle::sweepline_x = 0; 
 
 struct Circle {
     int x;
     int y;
     int radius;
-    Color color; // either "white" or "red"
-    Circle(int x, int y, int radius, Color color) : x{x}, y{y}, radius{radius}, color{color} {}
+    Circle(int x, int y, int radius) : x{x}, y{y}, radius{radius} {}
     void draw() {
-        DrawCircleLines(x, y, radius, color);
+        DrawCircleLines(x, y, radius, WHITE);
     }
 };
 
-bool circles_intersect(Circle a, Circle b) {
+/* bool circles_intersect(Circle a, Circle b) {
     double d = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
     return (abs(a.radius - b.radius) < d) && (d < (a.radius + b.radius));
+} */
+
+// Function to check intersection and draw points
+bool circles_intersect(Circle a, Circle b) { // ChatGPT
+    // Distance between the centers of the circles
+    double d = sqrt(pow(a.x - b.x, 2) + pow(a.y - b.y, 2));
+
+    // Check if the circles intersect
+    if ((abs(a.radius - b.radius) < d) && (d < (a.radius + b.radius))) {
+        // Now calculate intersection points
+
+        double aSquared = pow(a.radius, 2);
+        double bSquared = pow(b.radius, 2);
+        double dSquared = pow(d, 2);
+
+        // Distance from circle A's center to the line between intersection points
+        double distToLine = (aSquared - bSquared + dSquared) / (2 * d);
+
+        // Midpoint on the line between the centers of the two circles
+        double xMid = a.x + distToLine * (b.x - a.x) / d;
+        double yMid = a.y + distToLine * (b.y - a.y) / d;
+
+        // Height from the line to the intersection points
+        double h = sqrt(aSquared - pow(distToLine, 2));
+
+        // Offset from the midpoint to the intersection points
+        double offsetX = h * (b.y - a.y) / d;
+        double offsetY = h * (b.x - a.x) / d;
+
+        // Intersection points
+        Vector2 intersection1 = { static_cast<float>(xMid + offsetX), static_cast<float>(yMid - offsetY) };
+        Vector2 intersection2 = { static_cast<float>(xMid - offsetX), static_cast<float>(yMid + offsetY) };
+
+        // Draw the intersection points
+        DrawCircleV(intersection1, 5, RED); // Draw first point in red
+        DrawCircleV(intersection2, 5, RED); // Draw second point in red
+
+        return true;
+    }
+
+    return false;
 }
 
 int slow_intersections(vector<Circle>& circles) {
@@ -59,8 +122,6 @@ int slow_intersections(vector<Circle>& circles) {
             Circle& b = circles[j];
             if(circles_intersect(a, b)) {
                 num_intersections += 2;
-                a.color = RED;
-                b.color = RED;
             }
         }
     }
@@ -88,32 +149,91 @@ bool fast_intersections(vector<Circle>& circles) {
         Circle curr_c = event.second;
         Semicircle curr_top_smc = Semicircle(curr_c.x, curr_c.y, curr_c.radius, false);
         Semicircle curr_bottom_smc = Semicircle(curr_c.x, curr_c.y, curr_c.radius, true);
-        if(active_semicircles.count(curr_top_smc)) {
-            // this means we need to add both top and bottom
-            active_semicircles.erase(curr_bottom_smc);
-            active_semicircles.erase(curr_top_smc);
+        
+        /*cout<<"TRENUTNO STANJE"<<endl;
+        for(auto c : active_semicircles)
+            c.print();*/
 
-            
-            // PROVJERITI SUSJEDE
+        if(active_semicircles.count(curr_top_smc)) {
+            // this means we need to erase both top and bottom
+            // let's first check that if the neighbours are intersecting
+
+
+            if(active_semicircles.find(curr_top_smc) != active_semicircles.begin()) {
+                if(active_semicircles.find(curr_bottom_smc)++ != active_semicircles.end()) {
+                    //cout<<"OVDJE ";
+
+                    Semicircle top_neighbour = *(--active_semicircles.find(curr_top_smc));
+                    Semicircle bottom_neighbour = *(++active_semicircles.find(curr_bottom_smc));
+
+                    /*curr_top_smc.print();
+                    cout<<endl<<"TOP N ";
+                    top_neighbour.print();
+                    cout<<endl<<"BOTTOM N ";
+                    bottom_neighbour.print();*/
+
+                    Circle top_circle{top_neighbour.x, top_neighbour.y, top_neighbour.radius};
+                    Circle bottom_circle{bottom_neighbour.x, bottom_neighbour.y, bottom_neighbour.radius};
+                    if(circles_intersect(top_circle, bottom_circle))
+                        return true;
+                }
+            } 
+
+            // active_semicircles.erase(curr_bottom_smc); // maybe for the number of intersections
+            // active_semicircles.erase(curr_top_smc); // maybe for the number of intersections
         } else {
-            // this means we need to remove both top and bottom
+            // this means we need to insert both top and bottom
             active_semicircles.insert(curr_bottom_smc);
             active_semicircles.insert(curr_top_smc);
 
-            // PROVJERITI SUSJEDE
+            // We are comparing curr_c and top_circle and bottom_circle
+            // we already have curr_c
+            // top_c = *iter_top
+            // bottom_c = *iter_bottom
+            if(active_semicircles.find(curr_top_smc) != active_semicircles.begin()) {
+                Semicircle top_neighbour = *(--active_semicircles.find(curr_top_smc));
+                Circle top_circle{top_neighbour.x, top_neighbour.y, top_neighbour.radius};
+                if(circles_intersect(top_circle, curr_c))
+                    return true;
+            }
+            if(++active_semicircles.find(curr_bottom_smc) != active_semicircles.end()) {
+                Semicircle bottom_neighbour = *(++active_semicircles.find(curr_bottom_smc));
+                Circle bottom_circle{bottom_neighbour.x, bottom_neighbour.y, bottom_neighbour.radius};
+                if(circles_intersect(bottom_circle, curr_c))
+                    return true;
+            }
         }
     }
 
     return false;
 }
 
-int main() { // int main(void) ??
+int main() {
+    // TMP =============================================================================
+    Semicircle::sweepline_x = -50;
+    Semicircle a{0, 0, 50, false};
+    Semicircle b{0, 0, 50, true};
+    Semicircle c{40, 30, 5, true};
+    Semicircle d{40, 30, 5, false};
+
+    set<Semicircle> smcs;
+    smcs.insert(a);
+    smcs.insert(b);
+    Semicircle::sweepline_x = 40 - 5;
+    smcs.insert(c);
+    smcs.insert(d);
+
+    for(auto it = smcs.begin(); it != smcs.end(); it++)
+        it->print();
+
+    // TMP =============================================================================
+
     // Initialization
     const int screenWidth = 1600;
     const int screenHeight = 900;
-    InitWindow(screenWidth, screenHeight, "Random Circles Example");
+    InitWindow(screenWidth, screenHeight, "Intersecting circles");
 
-    SetTargetFPS(60);
+    SetTargetFPS(2);
 
     vector<Circle> circles;
 
@@ -122,18 +242,23 @@ int main() { // int main(void) ??
     for the semicircles, we can identify them too (we are solving inly the general case)
     */
 
+    // EXAMPLE: RANDOM
     for(int i = 0; i < 20; i++) {
         int x = GetRandomValue(0, screenWidth);
         int y = GetRandomValue(0, screenHeight);
         int radius = GetRandomValue(0, 100);
 
-        circles.push_back(Circle(x,y,radius, WHITE));
+        circles.push_back(Circle(x,y,radius));
     }
+
+    // EXAMPLE: 3 CIRCLES
+    // circles.push_back(Circle(400, 300, 140));
+    // circles.push_back(Circle(300, 100, 100));
+    // circles.push_back(Circle(260,220, 10));
 
     while(!WindowShouldClose()){
         BeginDrawing();
 
-        // Draw random circles
         for (Circle c : circles)
             c.draw();
 
@@ -141,7 +266,8 @@ int main() { // int main(void) ??
 
         if (IsKeyPressed(KEY_ENTER))
         {
-            cout<<"Number of intersections: "<<slow_intersections(circles)<<endl;
+            cout<<"Circles intersect: ";
+            // cout<<slow_intersections(circles)<<endl;
             cout<<fast_intersections(circles)<<endl;
         }
     }
